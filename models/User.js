@@ -46,6 +46,20 @@ const UserSchema = new mongoose.Schema({
     avatar: {
         type: String,
         default: ''
+    },
+    socialLinks: {
+        github: {
+            type: String,
+            default: ''
+        },
+        linkedin: {
+            type: String,
+            default: ''
+        },
+        twitter: {
+            type: String,
+            default: ''
+        }
     }
 }, { timestamps: true });
 

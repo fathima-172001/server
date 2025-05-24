@@ -6,6 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { changePassword } from '../controllers/profileController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -91,5 +92,8 @@ router.put("/avatar", verifyToken, uploadConfig.single('avatar'), async (req, re
         res.status(500).json({ message: "Error uploading avatar" });
     }
 });
+
+// Change password route
+router.put("/change-password", verifyToken, changePassword);
 
 export default router;
