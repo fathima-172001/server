@@ -1,5 +1,5 @@
 import express from 'express';
-import { verifyToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import Post from '../models/Post.js';
 import multer from 'multer';
 import path from 'path';
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Get all posts with populated comments and replies
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const posts = await Post.find()
             .populate('userId', 'username avatar')
@@ -48,7 +48,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // Create a post
-router.post('/', verifyToken, upload.single('image'), async (req, res) => {
+router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
     try {
         const { content } = req.body;
         let tags = [];
@@ -86,7 +86,7 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
 });
 
 // Like/Unlike a post
-router.post('/:id/like', verifyToken, async (req, res) => {
+router.post('/:id/like', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -108,7 +108,7 @@ router.post('/:id/like', verifyToken, async (req, res) => {
 });
 
 // Add a comment
-router.post('/:id/comments', verifyToken, async (req, res) => {
+router.post('/:id/comments', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -149,7 +149,7 @@ router.post('/:id/comments', verifyToken, async (req, res) => {
 });
 
 // Add a reply to a comment
-router.post('/:postId/comments/:commentId/replies', verifyToken, async (req, res) => {
+router.post('/:postId/comments/:commentId/replies', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -194,7 +194,7 @@ router.post('/:postId/comments/:commentId/replies', verifyToken, async (req, res
 });
 
 // Like/Unlike a comment
-router.post('/:postId/comments/:commentId/like', verifyToken, async (req, res) => {
+router.post('/:postId/comments/:commentId/like', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -240,7 +240,7 @@ router.post('/:postId/comments/:commentId/like', verifyToken, async (req, res) =
 });
 
 // Like/Unlike a reply
-router.post('/:postId/comments/:commentId/replies/:replyId/like', verifyToken, async (req, res) => {
+router.post('/:postId/comments/:commentId/replies/:replyId/like', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -291,7 +291,7 @@ router.post('/:postId/comments/:commentId/replies/:replyId/like', verifyToken, a
 });
 
 // Save/Unsave a post
-router.post('/:id/save', verifyToken, async (req, res) => {
+router.post('/:id/save', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -313,7 +313,7 @@ router.post('/:id/save', verifyToken, async (req, res) => {
 });
 
 // Share a post
-router.post('/:id/share', verifyToken, async (req, res) => {
+router.post('/:id/share', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -332,7 +332,7 @@ router.post('/:id/share', verifyToken, async (req, res) => {
 });
 
 // Get saved posts for a user
-router.get('/saved', verifyToken, async (req, res) => {
+router.get('/saved', authenticateToken, async (req, res) => {
     try {
         const savedPosts = await Post.find({ savedBy: req.user.id })
             .populate('userId', 'username avatar')
@@ -345,7 +345,7 @@ router.get('/saved', verifyToken, async (req, res) => {
 });
 
 // Get user's shared posts
-router.get('/shared', verifyToken, async (req, res) => {
+router.get('/shared', authenticateToken, async (req, res) => {
     try {
         const sharedPosts = await Post.find({
             'shares.userId': req.user.id,
@@ -378,7 +378,7 @@ router.get('/shared', verifyToken, async (req, res) => {
 });
 
 // Edit post
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -429,7 +429,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 });
 
 // Delete post (soft delete)
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) {
@@ -449,7 +449,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 });
 
 // Edit comment
-router.put('/:postId/comments/:commentId', verifyToken, async (req, res) => {
+router.put('/:postId/comments/:commentId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -503,7 +503,7 @@ router.put('/:postId/comments/:commentId', verifyToken, async (req, res) => {
 });
 
 // Delete comment (soft delete)
-router.delete('/:postId/comments/:commentId', verifyToken, async (req, res) => {
+router.delete('/:postId/comments/:commentId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -528,7 +528,7 @@ router.delete('/:postId/comments/:commentId', verifyToken, async (req, res) => {
 });
 
 // Edit reply
-router.put('/:postId/comments/:commentId/replies/:replyId', verifyToken, async (req, res) => {
+router.put('/:postId/comments/:commentId/replies/:replyId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -587,7 +587,7 @@ router.put('/:postId/comments/:commentId/replies/:replyId', verifyToken, async (
 });
 
 // Delete reply (soft delete)
-router.delete('/:postId/comments/:commentId/replies/:replyId', verifyToken, async (req, res) => {
+router.delete('/:postId/comments/:commentId/replies/:replyId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
         if (!post) {
@@ -617,7 +617,7 @@ router.delete('/:postId/comments/:commentId/replies/:replyId', verifyToken, asyn
 });
 
 // Get user's posts
-router.get('/user', verifyToken, async (req, res) => {
+router.get('/user', authenticateToken, async (req, res) => {
     try {
         const userPosts = await Post.find({
             userId: req.user.id,

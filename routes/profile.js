@@ -1,6 +1,6 @@
 // routes/profile.js
 import express from "express";
-import { verifyToken } from "../middleware/auth.js";
+import { authenticateToken } from "../middleware/auth.js";
 import User from "../models/User.js";
 import multer from 'multer';
 import path from 'path';
@@ -45,7 +45,7 @@ const uploadConfig = multer({
 });
 
 // Protected routes - require authentication
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select("-password");
         if (!user) {
@@ -57,7 +57,7 @@ router.get("/", verifyToken, async (req, res) => {
     }
 });
 
-router.put("/", verifyToken, async (req, res) => {
+router.put("/", authenticateToken, async (req, res) => {
     try {
         const updates = req.body;
         delete updates.password; // Don't allow password updates through this route
@@ -74,7 +74,7 @@ router.put("/", verifyToken, async (req, res) => {
     }
 });
 
-router.put("/avatar", verifyToken, uploadConfig.single('avatar'), async (req, res) => {
+router.put("/avatar", authenticateToken, uploadConfig.single('avatar'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
@@ -94,6 +94,6 @@ router.put("/avatar", verifyToken, uploadConfig.single('avatar'), async (req, re
 });
 
 // Change password route
-router.put("/change-password", verifyToken, changePassword);
+router.put("/change-password", authenticateToken, changePassword);
 
 export default router;
