@@ -1,14 +1,13 @@
-import express from 'express';
-import { authenticateToken } from '../../middleware/auth.js';
-import Chat from '../../models/Chat.js';
-import Message from '../../models/Message.js';
-import ConnectionRequest from '../../models/ConnectionRequest.js';
-import User from '../../models/User.js';
-
+const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
+const ConnectionRequest = require('../models/ConnectionRequest');
+const User = require('../models/User');
 
 // Get pending connection requests
-router.get('/requests', authenticateToken, async (req, res) => {
+router.get('/requests', auth, async (req, res) => {
   try {
     const requests = await ConnectionRequest.find({
       receiver: req.user._id,
@@ -23,7 +22,7 @@ router.get('/requests', authenticateToken, async (req, res) => {
 });
 
 // Send connection request
-router.post('/request', authenticateToken, async (req, res) => {
+router.post('/request', auth, async (req, res) => {
   try {
     const { receiverId } = req.body;
     
@@ -84,7 +83,7 @@ router.post('/request', authenticateToken, async (req, res) => {
 });
 
 // Respond to connection request
-router.post('/request/:requestId/respond', authenticateToken, async (req, res) => {
+router.post('/request/:requestId/respond', auth, async (req, res) => {
   try {
     const { requestId } = req.params;
     const { accept } = req.body;
@@ -145,7 +144,7 @@ router.post('/request/:requestId/respond', authenticateToken, async (req, res) =
 });
 
 // Get all chats for a user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const chats = await Chat.find({
       members: req.user._id
@@ -169,4 +168,4 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

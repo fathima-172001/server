@@ -9,7 +9,7 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const newMessage = new Message({
       conversationId: req.body.conversationId,
-      sender: req.user.id,
+      sender: req.user._id,
       text: req.body.text
     });
 

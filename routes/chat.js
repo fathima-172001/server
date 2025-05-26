@@ -1,9 +1,9 @@
 import express from 'express';
-import { authenticateToken } from '../../middleware/auth.js';
-import Chat from '../../models/Chat.js';
-import Message from '../../models/Message.js';
-import ConnectionRequest from '../../models/ConnectionRequest.js';
-import User from '../../models/User.js';
+import { authenticateToken } from '../middleware/auth.js';
+import Chat from '../models/Chat.js';
+import Message from '../models/Message.js';
+import ConnectionRequest from '../models/ConnectionRequest.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -26,19 +26,31 @@ router.get('/requests', authenticateToken, async (req, res) => {
 router.post('/request', authenticateToken, async (req, res) => {
   try {
     const { receiverId } = req.body;
+    console.log('Connection request received:', { 
+      receiverId, 
+      user: req.user,
+      body: req.body,
+      headers: req.headers 
+    });
     
     if (!receiverId) {
       return res.status(400).json({ message: 'Receiver ID is required' });
     }
 
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User not authenticated properly' });
+    }
+
     // Validate receiver exists
     const receiver = await User.findById(receiverId);
+    console.log('Receiver found:', receiver);
+    
     if (!receiver) {
       return res.status(404).json({ message: 'Receiver not found' });
     }
 
     // Check if trying to connect with self
-    if (receiverId === req.user._id) {
+    if (receiverId === req.user._id.toString()) {
       return res.status(400).json({ message: 'Cannot send connection request to yourself' });
     }
 
@@ -49,7 +61,8 @@ router.post('/request', authenticateToken, async (req, res) => {
         { sender: receiverId, receiver: req.user._id }
       ],
       status: 'pending'
-    });
+    }).lean();
+    console.log('Existing request:', existingRequest);
 
     if (existingRequest) {
       return res.status(400).json({ message: 'Connection request already exists' });
@@ -58,7 +71,8 @@ router.post('/request', authenticateToken, async (req, res) => {
     // Check if chat already exists
     const existingChat = await Chat.findOne({
       members: { $all: [req.user._id, receiverId] }
-    });
+    }).lean();
+    console.log('Existing chat:', existingChat);
 
     if (existingChat) {
       return res.status(400).json({ message: 'Chat already exists' });
@@ -67,19 +81,35 @@ router.post('/request', authenticateToken, async (req, res) => {
     // Create new request
     const request = new ConnectionRequest({
       sender: req.user._id,
-      receiver: receiverId
+      receiver: receiverId,
+      status: 'pending'
     });
+    console.log('New request created:', request);
+    
     await request.save();
+    console.log('Request saved successfully');
 
     // Populate sender details
     const populatedRequest = await ConnectionRequest.findById(request._id)
       .populate('sender', 'username avatar')
-      .populate('receiver', 'username avatar');
+      .populate('receiver', 'username avatar')
+      .lean();
 
+    console.log('Populated request:', populatedRequest);
     res.status(201).json(populatedRequest);
   } catch (error) {
-    console.error('Error creating request:', error);
-    res.status(500).json({ message: 'Failed to send connection request' });
+    console.error('Error in connection request:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code,
+      user: req.user
+    });
+    res.status(500).json({ 
+      message: 'Failed to send connection request',
+      error: error.message,
+      details: error.name
+    });
   }
 });
 
